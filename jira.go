@@ -185,7 +185,6 @@ func (c *Client) NewMultiPartRequest(method, urlStr string, buf *bytes.Buffer) (
 	}
 
 	u := c.baseURL.ResolveReference(rel)
-
 	req, err := http.NewRequest(method, u.String(), buf)
 	if err != nil {
 		return nil, err
@@ -193,7 +192,7 @@ func (c *Client) NewMultiPartRequest(method, urlStr string, buf *bytes.Buffer) (
 
 	// Set required headers
 	req.Header.Set("X-Atlassian-Token", "nocheck")
-
+	req.Header.Set("Content-Type", "application/json")
 	// Set authentication information
 	if c.Authentication.authType == authTypeSession {
 		// Set session cookie if there is one

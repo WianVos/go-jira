@@ -491,13 +491,17 @@ type SearchOptions struct {
 	Fields []string
 }
 
+//Issues is a collection of issue types
+// added this to implement sorting
+type Issues []Issue
+
 // searchResult is only a small wrapper around the Search (with JQL) method
 // to be able to parse the results
 type searchResult struct {
-	Issues     []Issue `json:"issues" structs:"issues"`
-	StartAt    int     `json:"startAt" structs:"startAt"`
-	MaxResults int     `json:"maxResults" structs:"maxResults"`
-	Total      int     `json:"total" structs:"total"`
+	Issues     Issues `json:"issues" structs:"issues"`
+	StartAt    int    `json:"startAt" structs:"startAt"`
+	MaxResults int    `json:"maxResults" structs:"maxResults"`
+	Total      int    `json:"total" structs:"total"`
 }
 
 // GetQueryOptions specifies the optional parameters for the Get Issue methods
@@ -508,9 +512,9 @@ type GetQueryOptions struct {
 	// Properties is the list of properties to return for the issue. By default no properties are returned.
 	Properties string `url:"properties,omitempty"`
 	// FieldsByKeys if true then fields in issues will be referenced by keys instead of ids
-	FieldsByKeys  bool `url:"fieldsByKeys,omitempty"`
-	UpdateHistory bool `url:"updateHistory,omitempty"`
-	ProjectKey string  `url:"projectKey,omitempty"`
+	FieldsByKeys  bool   `url:"fieldsByKeys,omitempty"`
+	UpdateHistory bool   `url:"updateHistory,omitempty"`
+	ProjectKey    string `url:"projectKey,omitempty"`
 }
 
 // CustomFields represents custom fields of JIRA
@@ -780,7 +784,7 @@ func (s *IssueService) AddLink(issueLink *IssueLink) (*Response, error) {
 // Search will search for tickets according to the jql
 //
 // JIRA API docs: https://developer.atlassian.com/jiradev/jira-apis/jira-rest-apis/jira-rest-api-tutorials/jira-rest-api-example-query-issues
-func (s *IssueService) Search(jql string, options *SearchOptions) ([]Issue, *Response, error) {
+func (s *IssueService) Search(jql string, options *SearchOptions) (Issues, *Response, error) {
 	var u string
 	if options == nil {
 		u = fmt.Sprintf("rest/api/2/search?jql=%s", url.QueryEscape(jql))
@@ -791,7 +795,7 @@ func (s *IssueService) Search(jql string, options *SearchOptions) ([]Issue, *Res
 
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {
-		return []Issue{}, nil, err
+		return Issues{}, nil, err
 	}
 
 	v := new(searchResult)
@@ -1094,4 +1098,14 @@ func (s *IssueService) RemoveWatcher(issueID string, userName string) (*Response
 	}
 
 	return resp, err
+}
+
+func (s Issues) Len() int {
+	return len(s)
+}
+func (s Issues) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s Issues) Less(i, j int) bool {
+	return len(s[i].ID) < len(s[j].ID)
 }
